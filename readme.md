@@ -45,9 +45,9 @@ gulp.src('scripts', function () {
 
 ### Module Bundlers
 
-O Webpack funciona de maneira diferente. Nele os nossos ativos estáticos são tratados como módulos e cada tipo de módulo passa por uma ‘transformação’ com um `loader` apropriado. E diferente de um task runner, compila esses ativos em um único processo e cada `require()` é feito sob demanda. A melhor maneira de perceber isso é lembrar que dar um `require()` em qualquer arquivo que não tenha uma extensão `.js` não é suportado nativamente.
+O Webpack funciona de maneira diferente. Nele os nossos ativos estáticos são tratados como módulos e cada tipo de módulo passa por uma ‘transformação’ com um `loader` apropriado. Diferente de um task runner, compila esses ativos em um único processo e cada `require()` é feito sob demanda. Uma boa maneira de perceber isso é lembrar que dar um `require()` em qualquer arquivo que não tenha uma extensão `.js` não é suportado nativamente.
 
-Então o que estamos fazendo de errado? Nós herdamos o nosso hábito de estruturar nosso código de task runners como o Gulp, estamos importando o `main.css` no nosso ponto de entrada e não damos tratamento diferenciado para os nossos componentes — nós tratamos o nosso CSS como uma entidade separada e não estamos nos aproveitando do potencial que o Webpack tem a oferecer.
+Então o que estamos fazendo de errado? Nós herdamos o nosso hábito de estruturar nosso código de task runners como o Gulp, estamos importando o `main.css` no nosso ponto de entrada e não damos nenhum tratamento diferenciado para os nossos componentes — nós tratamos o nosso CSS como uma entidade separada e não estamos nos aproveitando do potencial que o Webpack tem a oferecer.
 
 ## Precedencia de seletores e o problema do escopo global
 
@@ -63,7 +63,9 @@ Tomando por exemplo este pedaço de código vamos aplicar um estilo e ver como o
 
 ### Bootstrap (CSS prototipádo)
 
-### BEM (Block__Element—Modifier)
+### BEM (Block__Element-\-Modifier)
+
+### JSS (JavaScript Style Sheets)
 
 ### CSS Modules (CSS com escopo local)
 
