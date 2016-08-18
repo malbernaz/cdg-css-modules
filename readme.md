@@ -27,18 +27,18 @@ Há pouco tempo atrás a ferramenta certa pra compilar os nossos ativos estátic
 ```js
 // Estilos
 gulp.src('styles', function () {
-    return gulp.src('./diretorio/de/css')
-        .pipe(sass())
-        .pipe(gulp.dest('./destino'))
+  return gulp.src('./diretorio/de/css')
+    .pipe(sass())
+    .pipe(gulp.dest('./destino'))
 })
 
 // Scripts
 gulp.src('scripts', function () {
-    return gulp.src('./diretorio/de/js')
-        .pipe(eslint())
-        .pipe(concat())
-        .pipe(uglify())
-        .pipe(gulp.dest('./destino'))
+  return gulp.src('./diretorio/de/js')
+    .pipe(eslint())
+    .pipe(concat())
+    .pipe(uglify())
+    .pipe(gulp.dest('./destino'))
 })
 ```
 
@@ -69,7 +69,7 @@ O BEM, diferente de um framework é uma metodologia de escrever CSS. E essa meto
 
 #### Bloco (block):
 
-É uma entidade independente que tem significado próprio. 
+É uma entidade independente que tem significado próprio.
 
 Exemplos: `header`, `container`, `menu`.
 
@@ -90,11 +90,38 @@ Exemplos: `container--flex`, `list__link--highlighted`, `form__checkbox--checked
 ### CSS Modules (CSS com escopo local)
 
 
-## O problema do escopo global
+## O problema do escopo global e a precedência de seletores
 
-Um dos grandes problemas que os desenvolvedores encontram quando estão escrevendo o estilo de uma aplicação é a inexistência de escopo no CSS.
+Um dos grandes problemas que os desenvolvedores encontram quando estão escrevendo o estilo de uma aplicação é a inexistência de escopo no CSS. Então aplicar um estilo a um elemento qualquer pode ser mais complicado do que simplesmente mudar uma propriedade, ou adicionar uma classe.
 
+Isso acontece por que os seletores de um estilo aplicado a uma página tem prioridade sobre outros. À essa característica do CSS  damos o nome de “precedência de seletores” ou “especificidade de seletores”.
 
+Vamos tomar por exemplo este trecho de código abaixo:
 
+```html
+<style>
+  #blue span { color: blue; }
+  span.green { color: green; }
+  span { color: red }
+</style>
 
+<div class="blue">
+  <span class="green">olá mundo!</span>
+</div>
+```
 
+Nesse documento existem três seletores “tentando” estilizar um mesmo elemento. Para entender qual deles tem especificidade vamos usar essa tabela:
+
+| id | class | element |
+|:--:|:-----:|:-------:|
+| 0  | 0     | 0       |
+
+Os seletores estão organizados da esquerda para a direita por ordem de força. Então `id` é mais forte que `class`, que por sua vez é mais forte que que um elemento qualquer. E esses seletores se somam, por exemplo um seletor tal qual:
+
+```css
+span.green.fixed { color: green; position: fixed; }
+```
+
+tem duas classes aplicadas, então ele é mais forte. E o mesmo vale para os IDs. Então voltando ao primeiro exemplo teríamos — imaginando a tabela acima — ` 1 0 1` para `#blue span` que tomaria precedência, `0 1 1` para `span.green` e `0 0 1` para `span`.
+
+Com essas regras em mente, fica fácil perceber por que é tão difícil de escrever um CSS escalável para uma aplicação.
