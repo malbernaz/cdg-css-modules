@@ -49,47 +49,6 @@ O Webpack funciona de maneira diferente. Nele os nossos ativos estáticos são t
 
 Então o que estamos fazendo de errado? Nós herdamos o nosso hábito de estruturar nosso código de task runners como o Gulp, estamos importando o `main.css` no nosso ponto de entrada e não damos nenhum tratamento diferenciado para os nossos componentes — nós tratamos o nosso CSS como uma entidade separada e não estamos nos aproveitando do potencial que o Webpack tem a oferecer.
 
-## Técnicas de CSS
-
-### Bootstrap (CSS prototipádo)
-
-O Bootstrap foi desenvolvido no twitter como uma solução interna para padronizar o CSS. Mais tarde, o código foi aberto e em 2011 teve os seu primeiro release — que fez um sucesso instantâneo.
-
-Esse framework trouxe diversas vantagens para os desenvolvedores, principalmente para aqueles que não se sentiam a vontade para escrever CSS.
-
-Com o Bootstrap embutido no seu html, para estilizar um elemento  basta adicionar classes:
-
-```html
-<button class="btn btn-default btn-large">submit<button>
-```
-
-### BEM (Block__Element--Modifier)
-
-O BEM, diferente de um framework é uma metodologia de escrever CSS. E essa metodologia é baseada numa nomenclatura especifica para as classes dos elementos. São elas:
-
-#### Bloco (block):
-
-É uma entidade independente que tem significado próprio.
-
-Exemplos: `header`, `container`, `menu`.
-
-#### Elemento (element):
-
-Partes de um bloco que não têm nenhum significado independente. Eles são semanticamente ligados ao seu bloco. A convenção pede que se escreva o elemento depois do bloco com dois traços inferiores.
-
-Exemplos: `list__item`, `header__title`, `menu__button`.
-
-#### Modificador (modifier):
-
-Modificam blocos ou elementos e servem para mudar aparência ou comportamento. A convenção pede que se escreva o modificador depois do bloco ou elemento com dois hífens.
-
-Exemplos: `container--flex`, `list__link--highlighted`, `form__checkbox--checked`.
-
-### JSS (JavaScript Style Sheets)
-
-### CSS Modules (CSS com escopo local)
-
-
 ## O problema do escopo global e a precedência de seletores
 
 Um dos grandes problemas que os desenvolvedores encontram quando estão escrevendo o estilo de uma aplicação é a inexistência de escopo no CSS. Então aplicar um estilo a um elemento qualquer pode ser mais complicado do que simplesmente mudar uma propriedade, ou adicionar uma classe.
@@ -110,18 +69,96 @@ Vamos tomar por exemplo este trecho de código abaixo:
 </div>
 ```
 
-Nesse documento existem três seletores “tentando” estilizar um mesmo elemento. Para entender qual deles tem especificidade vamos usar essa tabela:
+Nesse documento existem três seletores “tentando” estilizar um mesmo elemento. Para entender qual deles tem especificidade maior vamos usar essa tabela:
 
 | id | class | element |
 |:--:|:-----:|:-------:|
 | 0  | 0     | 0       |
 
-Os seletores estão organizados da esquerda para a direita por ordem de força. Então `id` é mais forte que `class`, que por sua vez é mais forte que que um elemento qualquer. E esses seletores se somam, por exemplo um seletor tal qual:
+Os seletores estão organizados da esquerda para a direita por ordem de força. Então `id` é mais forte que `class`, que por sua vez é mais forte que um elemento qualquer. E esses seletores se somam — por exemplo um seletor tal qual `span.green.fixed` tem duas classes aplicadas, portanto tem mais força que `span.green`. O mesmo vale para os IDs.
 
-```css
-span.green.fixed { color: green; position: fixed; }
+Então voltando ao primeiro exemplo teríamos — imaginando a tabela acima — ` 1 0 1` para `#blue span` que tomaria precedência, `0 1 1` para `span.green` e `0 0 1` para `span`.
+
+**Não existe nenhum jeito de sobrescrever um id**? Existe. Na precedência de seletores duas regras sobrescrevem o id, uma é com a declaração `!important` logo após a regra a ser aplicada — o que é um bom indicador de que tem alguma coisa errada com o código da sua aplicação — e a outra é aplicar um atributo `style` ao elemento diretamente. 
+
+Essa ultima alternativa é a forma mais próxima do que podemos chamar de escopo local no CSS (mais sobre escopo local mais tarde).
+
+Com essas regras em mente, fica fácil perceber por que é tão difícil de escrever um CSS escalável para uma aplicação. Principalmente em um time com vários desenvolvedores escrevendo código ao mesmo tempo. Fica muito difícil de controlar como esse estilo vai se comportar.
+
+Vamos passar por algumas alternativas que tentam solucionar esse problema:
+
+### Bootstrap (CSS prototipádo)
+
+O Bootstrap foi desenvolvido no twitter como uma solução interna para padronizar o CSS. Mais tarde, o código foi aberto e em 2011 teve os seu primeiro release — que fez um sucesso instantâneo.
+
+#### Prós:
+
+- Fácil de usar, para estilizar um elemento basta adicionar classes:
+
+```html
+<button class="btn btn-default btn-large">submit<button>
 ```
 
-tem duas classes aplicadas, então ele é mais forte. E o mesmo vale para os IDs. Então voltando ao primeiro exemplo teríamos — imaginando a tabela acima — ` 1 0 1` para `#blue span` que tomaria precedência, `0 1 1` para `span.green` e `0 0 1` para `span`.
+- Não é necessário escrever uma linha de CSS para usar
 
-Com essas regras em mente, fica fácil perceber por que é tão difícil de escrever um CSS escalável para uma aplicação.
+#### Contras:
+
+- O Bootstrap é um framework inchado. Não é trivial, por exemplo, usar somente o sistema de grades ou os botões.
+- Não é só CSS. O `bootstrap.js` é necessário para se desfrutar de toda glória desse framework.
+- Tem opinião sobre como os elementos devem se parecer. Sobrescrever um estilo não é trivial (se lembram das regras de especificidade?).
+
+### BEM (Block__Element--Modifier)
+
+O BEM, diferente de um framework é uma metodologia de escrever CSS. E essa metodologia é baseada numa nomenclatura especifica para as classes dos elementos, muito simples de se entender.
+
+#### Bloco (block):
+
+É uma entidade independente que tem significado próprio.
+
+Exemplos: `header`, `container`, `menu`.
+
+#### Elemento (element):
+
+Partes de um bloco que não têm nenhum significado independente. São semanticamente ligados ao seu bloco. A convenção pede que se escreva o elemento depois do bloco com dois traços inferiores.
+
+Exemplos: `list__item`, `header__title`, `menu__button`.
+
+#### Modificador (modifier):
+
+Modificam blocos ou elementos e servem para mudar aparência ou comportamento. A convenção pede que se escreva o modificador depois do bloco ou elemento com dois hífens.
+
+Exemplos: `container--flex`, `list__link--highlighted`, `form__checkbox--checked`.
+
+#### Prós:
+
+- Incentiva o desenvolvedor a adotar uma nomenclatura concisa.
+- Incentiva o desenvolvedor a usar somente classes. O que é bom na precedência de seletores.
+- É escalável
+
+#### Contras:
+
+- É muito verbal.
+
+### Estilos em `./js` e Inline Styles
+
+Ironicamente, nos vemos hoje, principalmente no mundo React em uma posição em que estilos inline as vezes fazem mais sentido do que qualquer outra solução. Principalmente em aplicações de pequeno porte.
+
+Existem diversas bibliotecas de estilo `.js`. Varias delas com soluções interessantíssimas para os problemas aqui discutidos. Algumas se baseiam em inline Styles e outras não e elas vem geralmente para resolver os seguintes problemas:
+
+- Autoprefixing
+- Pseudo classes
+- Media queries
+
+#### Prós:
+
+- Fácil manutenção
+- Escopo local
+
+#### Contras:
+
+- Não é performático em escala
+- Não tem todos os recursos que o CSS tem (ex: media queries, animation)
+- É `.js`...
+
+### CSS Modules (CSS com escopo local)
+
