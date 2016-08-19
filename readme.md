@@ -79,11 +79,11 @@ Os seletores estão organizados da esquerda para a direita por ordem de força. 
 
 Então voltando ao primeiro exemplo teríamos — imaginando a tabela acima — ` 1 0 1` para `#blue span` que tomaria precedência, `0 1 1` para `span.green` e `0 0 1` para `span`.
 
-**Não existe nenhum jeito de sobrescrever um id**? Existe. Na precedência de seletores duas regras sobrescrevem o id, uma é com a declaração `!important` logo após a regra a ser aplicada — o que é um bom indicador de que tem alguma coisa errada com o código da sua aplicação — e a outra é aplicar um atributo `style` ao elemento diretamente. 
+**Não existe nenhum jeito de sobrescrever um id**? Existe. Na precedência de seletores duas regras sobrescrevem o id, uma é com a declaração `!important` logo após a regra a ser aplicada — o que é um bom indicador de que tem alguma coisa errada com o código da sua aplicação — e a outra é aplicar o atributo `style` ao elemento diretamente.
 
 Essa ultima alternativa é a forma mais próxima do que podemos chamar de escopo local no CSS (mais sobre escopo local mais tarde).
 
-Com essas regras em mente, fica fácil perceber por que é tão difícil de escrever um CSS escalável para uma aplicação. Principalmente em um time com vários desenvolvedores escrevendo código ao mesmo tempo. Fica muito difícil de controlar como esse estilo vai se comportar.
+Com essas regras em mente, fica fácil perceber por que é tão difícil de escrever um CSS escalável para uma aplicação. Principalmente em um time com vários desenvolvedores escrevendo o código ao mesmo tempo, fica muito difícil de controlar como esse estilo vai se comportar.
 
 Vamos passar por algumas alternativas que tentam solucionar esse problema:
 
@@ -99,17 +99,17 @@ O Bootstrap foi desenvolvido no twitter como uma solução interna para padroniz
 <button class="btn btn-default btn-large">submit<button>
 ```
 
-- Não é necessário escrever uma linha de CSS para usar
+- Não é necessário escrever uma linha de CSS para se usar
 
 #### Contras:
 
 - O Bootstrap é um framework inchado. Não é trivial, por exemplo, usar somente o sistema de grades ou os botões.
-- Não é só CSS. O `bootstrap.js` é necessário para se desfrutar de toda glória desse framework.
+- Não é só CSS. Um `bootstrap.js` é necessário para se desfrutar de toda glória desse framework.
 - Tem opinião sobre como os elementos devem se parecer. Sobrescrever um estilo não é trivial (se lembram das regras de especificidade?).
 
 ### BEM (Block__Element--Modifier)
 
-O BEM, diferente de um framework é uma metodologia de escrever CSS. E essa metodologia é baseada numa nomenclatura especifica para as classes dos elementos, muito simples de se entender.
+O BEM, diferente de um framework é uma metodologia de escrever CSS. E essa metodologia é baseada numa nomenclatura especifica para as classes dos elementos:
 
 #### Bloco (block):
 
@@ -143,12 +143,6 @@ Exemplos: `container--flex`, `list__link--highlighted`, `form__checkbox--checked
 
 Ironicamente, nos vemos hoje, principalmente no mundo React em uma posição em que estilos inline as vezes fazem mais sentido do que qualquer outra solução. Principalmente em aplicações de pequeno porte.
 
-Existem diversas bibliotecas de estilo `.js`. Varias delas com soluções interessantíssimas para os problemas aqui discutidos. Algumas se baseiam em inline Styles e outras não e elas vem geralmente para resolver os seguintes problemas:
-
-- Autoprefixing
-- Pseudo classes
-- Media queries
-
 #### Prós:
 
 - Fácil manutenção
@@ -160,5 +154,95 @@ Existem diversas bibliotecas de estilo `.js`. Varias delas com soluções intere
 - Não tem todos os recursos que o CSS tem (ex: media queries, animation)
 - É `.js`...
 
+#### Outras soluções em `./js`
+
+Existem diversas bibliotecas de estilo `.js`. Varias delas com soluções interessantíssimas para os problemas aqui discutidos. Algumas se baseiam em inline Styles e outras não e elas vem geralmente para resolver os seguintes problemas:
+
+- Autoprefixing
+- Pseudo classes
+- Media queries
+
+
 ### CSS Modules (CSS com escopo local)
+
+Um Módulo CSS é um arquivo CSS em que todos os nomes de classe e animação são escopados localmente por padrão. Todos os URLs `(url (...))` e `@imports` estão em formato de solicitação de módulos (`./xxx` e `../xxx` significa relativo,`xxx` e `xxx/yyy` significa pasta de módulos, por exemplo `node_modules`).
+
+#### Nomenclatura
+
+Para nomes de classes locais o camelCase é recomendado, mas não é obrigatório.
+
+#### Excessões
+
+Os identificadores `:global(.xxx)` e `@keyframes :global(XXX)` são usados para escopar respectivamente classes e animações globalmente. Se o selector está em modo global, o modo global também é ativado para as regras (isto permite fazer `animation: someAnimation;` local).
+
+```css
+.someLocalClass {
+  color: red;
+  animation: someAnimation; // Animação global
+}
+
+:global(.someGlobalClass) {
+  color: green;
+  animation: otherAnimation; // Animação local
+}
+
+@keyframes :global(someAnimation) {
+  from: {...}
+  to: {...}
+}
+
+@keyframes otherAnimation {
+  from: {...}
+  to: {...}
+}
+```
+
+
+#### Composição
+
+É possível compor seletores:
+
+```css
+.className {
+  color: green;
+  background: red;
+}
+
+.otherClassName {
+  composes: className; // a mágica acontece nesta linha
+  color: yellow;
+}
+```
+
+#### Dependencias
+
+isto também é possível:
+
+```css
+.otherClassName {
+  composes: className from './style.css';
+}
+```
+
+#### Uso com pré-processadores:
+
+Com um pré-processador fica fácil de definir um bloco local ou global: 
+
+```scss
+:global {
+  .globalClass {
+    color: green;
+  }
+}
+```
+
+#### Prós:
+
+- Menos conflitos
+- Dependencias explicitas
+- Fim do escopo global!
+
+#### Contras:
+
+- Exige alguma configuração. Necessita de um module bundler como o Webpack
 
