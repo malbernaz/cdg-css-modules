@@ -1,8 +1,6 @@
 # Proposta de migração para CSS Modules
 
-## Nosso CSS atualmente
-
-### Nossa estrutura
+## Nossa estrutura de CSS atualmente
 
 Dentro da estrutura do nosso projeto passamos a maior parte do tempo trabalhando na pasta `/src`.
 
@@ -75,13 +73,13 @@ Nesse documento existem três seletores “tentando” estilizar um mesmo elemen
 |:--:|:-----:|:-------:|
 | 0  | 0     | 0       |
 
-Os seletores estão organizados da esquerda para a direita por ordem de força. Então `id` é mais forte que `class`, que por sua vez é mais forte que um elemento qualquer. E esses seletores se somam — por exemplo um seletor tal qual `span.green.fixed` tem duas classes aplicadas, portanto tem mais força que `span.green`. O mesmo vale para os IDs.
+Os seletores estão organizados da esquerda para a direita por ordem de força. Então `id` é mais forte que `class`, que por sua vez é mais forte que um elemento. E esses seletores se somam — por exemplo um seletor tal qual `span.green.fixed` tem duas classes aplicadas, portanto tem mais força que `span.green`. O mesmo vale para os IDs.
 
 Então voltando ao primeiro exemplo teríamos — imaginando a tabela acima — ` 1 0 1` para `#blue span` que tomaria precedência, `0 1 1` para `span.green` e `0 0 1` para `span`.
 
-**Não existe nenhum jeito de sobrescrever um id**? Existe. Na precedência de seletores duas regras sobrescrevem o id, uma é com a declaração `!important` logo após a regra a ser aplicada — o que é um bom indicador de que tem alguma coisa errada com o código da sua aplicação — e a outra é aplicar o atributo `style` ao elemento diretamente.
+**Não existe nenhum jeito de sobrescrever um id**? Existe. Na precedência de seletores duas regras sobrescrevem o id, uma é com usar a declaração `!important` logo após a regra a ser aplicada — o que é um bom indicador de que tem alguma coisa errada com o código da sua aplicação — e a outra é aplicar o atributo `style` ao elemento diretamente.
 
-Essa ultima alternativa é a forma mais próxima do que podemos chamar de escopo local no CSS (mais sobre escopo local mais tarde).
+Essa ultima alternativa é a forma mais próxima do que podemos chamar de escopo local no CSS nativamente (mais sobre escopo local mais tarde).
 
 Com essas regras em mente, fica fácil perceber por que é tão difícil de escrever um CSS escalável para uma aplicação. Principalmente em um time com vários desenvolvedores escrevendo o código ao mesmo tempo, fica muito difícil de controlar como esse estilo vai se comportar.
 
@@ -133,11 +131,10 @@ Exemplos: `container--flex`, `list__link--highlighted`, `form__checkbox--checked
 
 - Incentiva o desenvolvedor a adotar uma nomenclatura concisa.
 - Incentiva o desenvolvedor a usar somente classes. O que é bom na precedência de seletores.
-- É escalável
 
 #### Contras:
 
-- É muito verbal.
+- Extremamente verbal. Os nomes de classe podem ficar muito grandes.
 
 ### Estilos em `./js` e Inline Styles
 
@@ -156,7 +153,7 @@ Ironicamente, nos vemos hoje, principalmente no mundo React em uma posição em 
 
 #### Outras soluções em `./js`
 
-Existem diversas bibliotecas de estilo `.js`. Varias delas com soluções interessantíssimas para os problemas aqui discutidos. Algumas se baseiam em inline Styles e outras não e elas vem geralmente para resolver os seguintes problemas:
+Existem diversas bibliotecas de estilo `.js`. Varias delas com soluções interessantíssimas para os problemas aqui discutidos. Algumas se baseiam em inline Styles e outras não, e elas vem geralmente para resolver os seguintes problemas:
 
 - Autoprefixing
 - Pseudo classes
@@ -164,6 +161,8 @@ Existem diversas bibliotecas de estilo `.js`. Varias delas com soluções intere
 
 
 ### CSS Modules (CSS com escopo local)
+
+Chegamos então a solução que eu considero ser a mais elegante, os CSS Modules.
 
 Um Módulo CSS é um arquivo CSS em que todos os nomes de classe e animação são escopados localmente por padrão. Todos os URLs `(url (...))` e `@imports` estão em formato de solicitação de módulos (`./xxx` e `../xxx` significa relativo,`xxx` e `xxx/yyy` significa pasta de módulos, por exemplo `node_modules`).
 
@@ -219,8 +218,8 @@ Os identificadores `:global(.xxx)` e `@keyframes :global(XXX)` são usados para 
 isto também é possível:
 
 ```css
-.otherClassName {
-  composes: className from './style.css';
+.className {
+  composes: otherClassName from './style.css';
 }
 ```
 
@@ -246,3 +245,52 @@ Com um pré-processador fica fácil de definir um bloco local ou global:
 
 - Exige alguma configuração. Necessita de um module bundler como o Webpack
 
+## Conclusão
+
+Acho que existem dois problemas que precisam ser resolvidos. Um é organizacional. Acho que o nosso projeto se beneficiaria de uma estrutura como essa:
+
+```
+/src
+├─ /components
+├─ /containers
+  ├─ /Header
+  └─ /Footer
+    ├─ Footer.css
+    └─ Footer.js
+  └─ /Main
+└─ /Theme
+  ├─ /variables
+  └─ /extends
+  
+```
+
+em que cada componente seja encapsulado dentro do seu diretório, junto com a sua folha de estilos. Sendo por exemplo o `Footer.js` estruturado dessa maneira:
+
+```js
+import React, { Component } from 'react'
+import s from './Footer.css'
+
+class Footer extends Component {
+  render () {
+    return (
+      <footer className={ s.root }>
+        { ... }
+      </footer>
+    )
+  }
+}
+```
+
+O segundo problema é de boas práticas. Os CSS Modules são uma boa escolha na minha opinião pelo escopo local, mas também por que encorajam o desenvolvedor a usar seletores simples (sem aninhamento).
+
+Como alcançar a escalabilidade? Dentro do nosso projeto vemos diversos padrões que se repetem no CSS, como elementos que tem uma semelhança grande e variáveis de cor. A melhor maneira de trabalhar esse problema é requerindo essas variáveis quando necessárias, por exemplo para um componente de botão:
+
+```css
+@import '../theme/vars/';
+@import '../theme/extends';
+
+.Button {
+  composes: genericButton;
+  color: var(--someColor)
+}
+```
