@@ -62,7 +62,7 @@ Vamos tomar por exemplo este trecho de código abaixo:
   span { color: red }
 </style>
 
-<div class="blue">
+<div id="blue">
   <span class="green">olá mundo!</span>
 </div>
 ```
